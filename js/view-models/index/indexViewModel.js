@@ -54,6 +54,23 @@ var indexViewModel = {
             this.id = dataObj.id;
         }
 
+        self.forsquareAPICall = function (marker) {
+            var clientId = "ADD231Y2455M2GT0IBKL53WH2B52VDF3EJDT0FCLLOGAC5I4";
+            var client_secret = "FGT1TFGQSEAO3DU3ISGF50GDWASJAM5BF50AE1G5AVBT5R4U";
+            var url = "https://api.foursquare.com/v2/venues/" + marker.id + "?client_id=" + clientId + "&client_secret=" + client_secret;
+            var result;
+            $.ajax({
+                url: url,
+                dataType: "json",
+                success: function (data) {
+                    result = data.response.venue;
+                },
+                error: function (e) {
+                    result = false;
+                }
+            });
+        }
+
         model["locations"].forEach(function (marker) {
             self.markers.push(new self.Marker(marker));
         });
@@ -120,9 +137,9 @@ var indexViewModel = {
             marker.pin.addListener('mouseout', function () {
                 this.setIcon(defaultIcon);
             });
-            if(result){
+            if (result) {
 
-            }else{
+            } else {
 
             }
         });
@@ -168,9 +185,9 @@ var indexViewModel = {
                 infowindow.setContent('');
                 infowindow.marker = marker;
                 marker.setAnimation(google.maps.Animation.BOUNCE);
-                    setTimeout(function () {
-                        marker.setAnimation(null);
-                    }, 1450);
+                setTimeout(function () {
+                    marker.setAnimation(null);
+                }, 1450);
                 infowindow.addListener('closeclick', function () {
                     infowindow.marker = null;
                 });
@@ -271,22 +288,5 @@ var indexViewModel = {
             google.maps.event.trigger(marker.pin, 'click');
             self.hideElements();
         };
-
-        self.forsquareAPICall = function(marker) {
-            var clientId = "ADD231Y2455M2GT0IBKL53WH2B52VDF3EJDT0FCLLOGAC5I4";
-            var client_secret = "FGT1TFGQSEAO3DU3ISGF50GDWASJAM5BF50AE1G5AVBT5R4U";
-            var url = "https://api.foursquare.com/v2/venues/" + marker.id + "?client_id=" + clientId + "&client_secret=" + client_secret;
-            var result;
-            $.ajax({
-                url: url,
-                dataType: "json",
-                success: function (data) {
-                    result = data.response.venue;
-                },
-                error: function (e) {
-                    result = false;
-                }
-            });
-        }
     } // render
 }
