@@ -1,0 +1,3 @@
+function mainViewModel() {
+    indexViewModel.init();
+}

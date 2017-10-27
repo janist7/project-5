@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Move planner</title>
+    <link rel="stylesheet" href="css/app.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="application-name" content="Move planner">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+</head>
+
+<body>
+    <div class="container">
+        <div class="options-box">
+            <h1>Neighborhood Map</h1>
+            <div>
+                <input data-bind="click: $root.showMarkers" id="show-markers" type="button" value="Show Markers">
+                <input data-bind="click: $root.hideMarkers" id="hide-markers" type="button" value="Hide Markers">
+                <hr>
+                <span class="text"> Draw a shape to search within it for places!</span>
+                <input data-bind="click: $root.toggleDrawing" id="toggle-drawing" type="button" value="Drawing Tools">
+            </div>
+            <hr>
+            <div>
+                <input data-bind="value: address, attr: {placeholder: ph}" id="zoom-to-area-text" type="text">
+                <input data-bind="click: $root.zoomToArea" id="zoom-to-area" type="button" value="Zoom">
+            </div>
+            <hr>
+            <div>
+                <input data-bind="textInput: userInput, event: {keyup: $root.filterMarkers}" id="zoom-to-area-text" type="search">
+                <ul id="list-view" data-bind="foreach: visibleMarkers">
+                    <li data-bind="text: title, click: $parent.showInfoWindow" "></li>
+                </ul>
+            </div>
+        </div>
+        <div id="error "></div>
+        <div id="map "></div>
+    </div>
+    <script src="https://ajax.aspnetcdn.com/ajax/knockout/knockout-3.4.2.js "></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js "></script>
+    <script src="js/config/config.js "></script>
+    <script src="js/models/model.js "></script>
+    <script src="js/errors/errors.js "></script>
+    <script src="js/view-models/index/indexViewModel.js "></script>
+    <script src="js/view-models/app.js "></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?libraries=places,geometry,drawing&key=AIzaSyBr7vk0CPZVQCX88RC4FQGlVX6_NsfjdSg&v=3&callback=mainViewModel " onerror="googleMapsError "></script>
+</body>
+
+</html>
