@@ -48,20 +48,27 @@ var indexViewModel = {
         // Observables
 
         self.Marker = function (dataObj) {
-            this.title = dataObj.title;
-            this.latLng = dataObj.latLng;
+            this.title = '-';
+            this.latLng = '-';
             this.pin = null;
             this.id = dataObj.id;
+            this.formattedAddress = [];
+            this.forsquareLink = ('-');
+            this.forsquareImageLink = '-';
+            this.forsquareRating = '-';
+            this.hours = '-';
         }
 
         self.forsquareAPICall = function (marker) {
             var clientId = "ADD231Y2455M2GT0IBKL53WH2B52VDF3EJDT0FCLLOGAC5I4";
             var client_secret = "FGT1TFGQSEAO3DU3ISGF50GDWASJAM5BF50AE1G5AVBT5R4U";
-            var url = "https://api.foursquare.com/v2/venues/" + marker.id + "?client_id=" + clientId + "&client_secret=" + client_secret;
+            var version = "20171030";
+            var url = "https://api.foursquare.com/v2/venues/" + marker.id + "?client_id=" + clientId + "&client_secret=" + client_secret + "&v=" + version;
             var result;
             $.ajax({
                 url: url,
                 dataType: "json",
+                async: false,
                 success: function (data) {
                     result = data.response.venue;
                 },
@@ -69,6 +76,8 @@ var indexViewModel = {
                     result = false;
                 }
             });
+
+            return result;
         }
 
         model["locations"].forEach(function (marker) {
@@ -119,6 +128,30 @@ var indexViewModel = {
 
         /* The following group uses the location array to create an array of markers on initialize. */
         self.markers().forEach(function (marker) {
+            var result = self.forsquareAPICall(marker);
+            if (result.name) {
+                marker.title = result.name;
+            }
+            var location = new google.maps.LatLng(
+                result.location.lat,
+                result.location.lng
+            );
+            marker.latLng = location;
+            if (result.location) {
+                marker.formattedAddress = result.location.hasOwnProperty('formattedAddress') ? result.location.formattedAddress : "-";
+            }
+            if (result.canonicalUrl) {
+                marker.forsquareLink = result.canonicalUrl;
+            }
+            if (result.bestPhoto) {
+                marker.forsquareImageLink = result.bestPhoto.prefix + "100x100" + result.bestPhoto.sufix;
+            }
+            if (result.rating) {
+                marker.forsquareRating = result.rating;
+            }
+            if (result.hours) {
+                marker.hours = result.hours.hasOwnProperty('statuss') ? result.hours.status : "-";
+            }
             var markerOptions = {
                 title: marker.title,
                 map: self.googleMap,
@@ -126,10 +159,18 @@ var indexViewModel = {
                 animation: google.maps.Animation.DROP,
                 icon: defaultIcon,
             };
-            var result = self.forsquareAPICall(marker);
             marker.pin = new google.maps.Marker(markerOptions);
+            var contentString = '<h3>' + marker.title + '</h3>' +
+            '<hr>' + '<div class="forsquare">' +
+            '<p> Address: ' +
+            marker.formattedAddress[0] + ", " +
+            marker.formattedAddress[1] + ", " +
+            marker.formattedAddress[2] + '</p>' +
+            '<p> Rating: ' + marker.forsquareRating + '</p>' +
+            '</div>' +
+            '<hr>' + '<div id="pano"></div>';
             marker.pin.addListener('click', function () {
-                self.populateInfoWindow(this, largeInfowindow);
+                self.populateInfoWindow(this, largeInfowindow, contentString);
             });
             marker.pin.addListener('mouseover', function () {
                 this.setIcon(highlightedIcon);
@@ -137,11 +178,6 @@ var indexViewModel = {
             marker.pin.addListener('mouseout', function () {
                 this.setIcon(defaultIcon);
             });
-            if (result) {
-
-            } else {
-
-            }
         });
 
         self.showMarkers();
@@ -180,13 +216,13 @@ var indexViewModel = {
         /* This function populates the infowindow when the marker is clicked. We'll only allow
         one infowindow which will open at the marker that is clicked, and populate based
         on that markers position. */
-        self.populateInfoWindow = function (marker, infowindow) {
-            if (infowindow.marker != marker) {
+        self.populateInfoWindow = function (pin, infowindow, contentString) {
+            if (infowindow.marker != pin) {
                 infowindow.setContent('');
-                infowindow.marker = marker;
-                marker.setAnimation(google.maps.Animation.BOUNCE);
+                infowindow.marker = pin;
+                pin.setAnimation(google.maps.Animation.BOUNCE);
                 setTimeout(function () {
-                    marker.setAnimation(null);
+                    pin.setAnimation(null);
                 }, 1420);
                 infowindow.addListener('closeclick', function () {
                     infowindow.marker = null;
@@ -198,8 +234,7 @@ var indexViewModel = {
                     if (status == google.maps.StreetViewStatus.OK) {
                         var nearStreetViewLocation = data.location.latLng;
                         var heading = google.maps.geometry.spherical.computeHeading(
-                            nearStreetViewLocation, marker.position);
-                        infowindow.setContent('<div>' + marker.title + '</div><div id="pano"></div>');
+                            nearStreetViewLocation, pin.position);
                         var panoramaOptions = {
                             position: nearStreetViewLocation,
                             pov: {
@@ -210,12 +245,13 @@ var indexViewModel = {
                         var panorama = new google.maps.StreetViewPanorama(
                             document.getElementById('pano'), panoramaOptions);
                     } else {
-                        infowindow.setContent('<div>' + marker.title + '</div>' +
+                        infowindow.setContent('<div>' + pin.title + '</div>' +
                             '<div>No Street View Found</div>');
                     }
                 }
-                streetViewService.getPanoramaByLocation(marker.position, radius, getStreetView);
-                infowindow.open(map, marker);
+                streetViewService.getPanoramaByLocation(pin.position, radius, getStreetView);
+                infowindow.setContent(contentString);
+                infowindow.open(map, pin);
             }
         }
 
