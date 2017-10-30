@@ -187,7 +187,7 @@ var indexViewModel = {
                 marker.setAnimation(google.maps.Animation.BOUNCE);
                 setTimeout(function () {
                     marker.setAnimation(null);
-                }, 1450);
+                }, 1420);
                 infowindow.addListener('closeclick', function () {
                     infowindow.marker = null;
                 });
