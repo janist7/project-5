@@ -8,6 +8,7 @@ Requires a browser, run by opening index.html or going to this [site](https://ja
 
 ## Built With
 
+* [Knockoutjs](http://knockoutjs.com/) - Provides basic MVC functionallity
 * [Bootstrap](http://getbootstrap.com/) - For basic css
 * [Foursqare api](https://developer.foursquare.com/) - Additional data
 * [Google maps api](https://developers.google.com/maps/) - Main content of project
