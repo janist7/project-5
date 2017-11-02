@@ -6,6 +6,19 @@ var indexViewModel = {
         /*global styles*/
         /*global ko*/
         var map;
+        var drawingManager;
+        var zoomAutocomplete;
+        var largeInfowindow;
+        var polygon = null;
+        var options = {
+            types: ['geocode'],
+            componentRestrictions: {
+                country: "lv"
+            }
+        };
+        var clientId = "ADD231Y2455M2GT0IBKL53WH2B52VDF3EJDT0FCLLOGAC5I4";
+        var client_secret = "FGT1TFGQSEAO3DU3ISGF50GDWASJAM5BF50AE1G5AVBT5R4U";
+        var version = "20171030";
         map = new google.maps.Map(document.getElementById('map'), {
             center: {
                 lat: 56.948005,
@@ -21,40 +34,48 @@ var indexViewModel = {
                 position: google.maps.ControlPosition.TOP_RIGHT
             }
         });
+        largeInfowindow = new google.maps.InfoWindow({
+            maxWidth: 200
+        });
+        zoomAutocomplete = new google.maps.places.Autocomplete(
+            document.getElementById('zoom-to-area-text'),
+            options
+        );
+        /* Initialize the drawing manager. */
+        drawingManager = new google.maps.drawing.DrawingManager({
+            drawingMode: google.maps.drawing.OverlayType.POLYGON,
+            drawingControl: true,
+            drawingControlOptions: {
+                position: google.maps.ControlPosition.TOP_LEFT,
+                drawingModes: [google.maps.drawing.OverlayType.POLYGON]
+            }
+        });
 
-        ko.applyBindings(new indexViewModel.render(map));
+        ko.applyBindings(new indexViewModel.render(
+            map, drawingManager, zoomAutocomplete,
+            largeInfowindow, polygon, options,
+            clientId, client_secret, version
+        ));
     }, // init
 
 
-    render: function (map) {
+    render: function (map, drawingManager, zoomAutocomplete, largeInfowindow, polygon, options, clientId, client_secret, version) {
         "use strict";
         var self = this;
         /*global $*/
         /*global model*/
 
-        /* Variables */
-        var polygon = null;
-        var options = {
-            types: ['geocode'],
-            componentRestrictions: {
-                country: "lv"
-            }
-        };
-        var largeInfowindow = new google.maps.InfoWindow({maxWidth: 200});
-        var drawingManager;
-        var clientId = "ADD231Y2455M2GT0IBKL53WH2B52VDF3EJDT0FCLLOGAC5I4";
-        var client_secret = "FGT1TFGQSEAO3DU3ISGF50GDWASJAM5BF50AE1G5AVBT5R4U";
-        var version = "20171030";
-        // Variables
-
         /* Observables */
         self.markers = ko.observableArray();
         self.address = ko.observable('');
         self.visibleMarkers = ko.observableArray();
-        self.ph = ko.observable('Enter your favorite area in Riga!');
+        self.phzoom = ko.observable('Zoom to location');
+        self.phfilter = ko.observable('Search place');
         self.userInput = ko.observable('');
         // Observables
 
+
+        /* Marker object */
         self.Marker = function (dataObj) {
             this.title = dataObj.name;
             this.latLng = dataObj.latLng;
@@ -68,11 +89,15 @@ var indexViewModel = {
             this.hours = '-';
         };
 
+
+        /* Create all markers from marker object */
         model.locations.forEach(function (marker) {
             self.markers.push(new self.Marker(marker));
         });
 
-        function makeMarkerIcon(markerColor) {
+
+        /* Create costom marker pin from passed color */
+        self.makeMarkerIcon = function (markerColor) {
             var markerImage = new google.maps.MarkerImage(
                 'http://chart.googleapis.com/chart?chst=d_map_spin&chld=1.15|0|' + markerColor + '|40|_|%E2%80%A2',
                 new google.maps.Size(21, 34),
@@ -81,21 +106,34 @@ var indexViewModel = {
                 new google.maps.Size(21, 34)
             );
             return markerImage;
-        }
-        var defaultIcon = makeMarkerIcon('0091ff');
-        var highlightedIcon = makeMarkerIcon('FFFF24');
+        };
 
-        /* This function will loop through the markers array and display them all. */
+
+        var defaultIcon = self.makeMarkerIcon('0091ff');
+        var highlightedIcon = self.makeMarkerIcon('FFFF24');
+
+
+        /* This function will loop through the markers array and display them all and add them initially to visible markers array */
         self.showMarkers = function () {
             var bounds = new google.maps.LatLngBounds();
             self.markers().forEach(function (marker) {
+                marker.pin.setVisible(true);
                 marker.pin.setMap(map);
+                if (!polygon) {
+                    if (ko.unwrap(self.visibleMarkers).indexOf(marker) === -1) {
+                        self.visibleMarkers.push(marker);
+                    }
+                }
                 bounds.extend(marker.pin.position);
             });
+            if (polygon) {
+                self.searchWithinPolygon(polygon);
+            }
             map.fitBounds(bounds);
         };
 
-        /* This function will loop through the listings and hide them all. */
+
+        /* This function will loop through the markers and hide them all and remove them from visible markers array. */
         self.hideMarkers = function () {
             self.visibleMarkers.removeAll();
             self.markers().forEach(function (marker) {
@@ -103,17 +141,8 @@ var indexViewModel = {
             });
         };
 
-        /* Initialize the drawing manager. */
-        drawingManager = new google.maps.drawing.DrawingManager({
-            drawingMode: google.maps.drawing.OverlayType.POLYGON,
-            drawingControl: true,
-            drawingControlOptions: {
-                position: google.maps.ControlPosition.TOP_LEFT,
-                drawingModes: [google.maps.drawing.OverlayType.POLYGON]
-            }
-        });
 
-        /* The following group uses the location array to create an array of markers on initialize. */
+        /* The following group uses the markers array to create an array of markers on initialize and gets information from forsquare.*/
         self.markers().forEach(function (marker) {
             var url = "https://api.foursquare.com/v2/venues/" + marker.id + "?client_id=" + clientId + "&client_secret=" + client_secret + "&v=" + version;
             var markerOptions = {
@@ -162,15 +191,7 @@ var indexViewModel = {
             });
         });
         self.showMarkers();
-        self.markers().forEach(function (marker) {
-            self.visibleMarkers.push(marker);
-        });
 
-        /* Autocomplete for zoomToArea. Limited only to Latvia. */
-        var zoomAutocomplete = new google.maps.places.Autocomplete(
-            document.getElementById('zoom-to-area-text'),
-            options
-        );
 
         /* Zooms to location based on address given, needs to unwrap the observable first before the value can be used */
         self.zoomToArea = function () {
@@ -195,9 +216,8 @@ var indexViewModel = {
             }
         };
 
-        /* This function populates the infowindow when the marker is clicked. We'll only allow
-        one infowindow which will open at the marker that is clicked, and populate based
-        on that markers position. */
+
+        /* This function populates the infowindow when the pin is clicked. */
         self.populateInfoWindow = function (marker, infowindow) {
             if (infowindow.marker !== marker.pin) {
                 infowindow.setContent('');
@@ -267,23 +287,32 @@ var indexViewModel = {
             }
         };
 
-        // This shows and hides (respectively) the drawing options.
+
+        /* Event for when a marker is clicked*/
+        self.showInfoWindow = function (marker) {
+            google.maps.event.trigger(marker.pin, 'click');
+        };
+
+
+        // This toggles the poligon drawing option.
         self.toggleDrawing = function () {
             if (drawingManager.map) {
                 drawingManager.setMap(null);
                 if (polygon !== null) {
                     polygon.setMap(null);
-                    self.showMarkers();
-                    self.filterMarkers();
+                    polygon = null;
                 }
+                self.showMarkers();
+                self.filterMarkers();
             } else {
                 drawingManager.setMap(map);
             }
         };
 
-        // Add an event listener so that the polygon is captured,  call the
-        // searchWithinPolygon function. This will show the markers in the polygon,
-        // and hide any outside of it.
+
+        /* Add an event listener so that the polygon is captured,  call the
+        searchWithinPolygon function. This will show the markers in the polygon,
+        and hide any outside of it. */
         drawingManager.addListener('overlaycomplete', function (event) {
             if (polygon) {
                 polygon.setMap(null);
@@ -297,9 +326,10 @@ var indexViewModel = {
             polygon.getPath().addListener('insert_at', self.searchWithinPolygon);
         });
 
-        // This function hides all markers outside the polygon,
-        // and shows only the ones within it. This is so that the
-        // user can specify an exact area of search.
+
+        /* This function hides all markers outside the polygon,
+        and shows only the ones within it. This is so that the
+        user can specify an exact area of search. */
         self.searchWithinPolygon = function () {
             self.visibleMarkers.removeAll();
             self.markers().forEach(function (marker) {
@@ -307,40 +337,41 @@ var indexViewModel = {
                 if (google.maps.geometry.poly.containsLocation(marker.pin.position, polygon)) {
                     marker.pin.setMap(map);
                     self.visibleMarkers.push(marker);
+                    marker.pin.setVisible(true);
                 } else {
                     marker.pin.setMap(null);
                 }
             });
         };
 
-        self.filterMarkers = function () {
-            var searchInput = self.userInput().toLowerCase();
 
+        self.filterInput = function (searchInput) {
             self.visibleMarkers.removeAll();
-
-            // This looks at the name of each places and then determines if the user
             // input can be found within the place name.
             self.markers().forEach(function (marker) {
                 marker.pin.setVisible(false);
-
-                if (marker.title.toLowerCase().indexOf(searchInput) !== -1) {
+                if (searchInput === "") {
+                    self.showMarkers();
+                } else if (marker.title.toLowerCase().indexOf(searchInput) !== -1 && searchInput !== "" && marker.pin.map !== null) {
                     self.visibleMarkers.push(marker);
                 }
             });
-
-
             self.visibleMarkers().forEach(function (marker) {
                 marker.pin.setVisible(true);
             });
         };
 
-        self.showInfoWindow = function (marker) {
-            google.maps.event.trigger(marker.pin, 'click');
-        };
 
-        self.showMarkersAndFilter = function () {
-            self.showMarkers();
-            self.filterMarkers();
+        /* Filters visible markers based on user input*/
+        self.filterMarkers = function () {
+            var searchInput = self.userInput().toLowerCase();
+            if (polygon) {
+                self.searchWithinPolygon(polygon);
+                self.filterInput(searchInput);
+            } else {
+                // This looks at the name of each places and then determines if the user
+                self.filterInput(searchInput);
+            }
         };
     } // render
 };

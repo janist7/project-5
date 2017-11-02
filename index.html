@@ -2,10 +2,10 @@
 <html>
 
 <head>
-    <title>Move planner</title>
+    <title>Neighborhood map</title>
     <link rel="stylesheet" href="css/app.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="application-name" content="Move planner">
+    <meta name="application-name" content="Neighborhood map">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
 </head>
 
@@ -25,7 +25,7 @@
             <div id="collapse1" class="container panel-collapse collapse">
                 <h2 class="heading dropdown-top text-center">Tools</h2>
                 <div>
-                    <input class="btn btn-block" data-bind="click: $root.showMarkersAndFilter" id="show-markers" type="button" value="Show Markers">
+                    <input class="btn btn-block" data-bind="click: $root.showMarkers" id="show-markers" type="button" value="Show Markers">
                     <input class="btn btn-block" data-bind="click: $root.hideMarkers" id="hide-markers" type="button" value="Hide Markers">
                 </div>
                 <hr>
@@ -35,14 +35,14 @@
                 </div>
                 <hr>
                 <div>
-                    <input class="form-control" data-bind="value: address, attr: {placeholder: ph}" id="zoom-to-area-text" type="search">
+                    <input class="form-control" data-bind="value: address, attr: {placeholder: phzoom}" id="zoom-to-area-text" type="search">
                     <p></p>
                     <input class="btn btn-block" data-bind="click: $root.zoomToArea" id="zoom-to-area" type="button" value="Zoom">
                 </div>
                 <hr>
                 <div>
                     <h2 class="heading text-center">Filter</h2>
-                    <input class="form-control" data-bind="textInput: userInput, event: {keyup: $root.filterMarkers}" id="filter" type="search">
+                    <input class="form-control" data-bind="textInput: userInput, event: {keyup: $root.filterMarkers}, attr: {placeholder: phfilter}" id="filter" type="search">
                     <ul class="list-group" data-bind="foreach: visibleMarkers">
                         <li class="list-group-item" data-bind="text: title, click: $parent.showInfoWindow"></li>
                     </ul>
