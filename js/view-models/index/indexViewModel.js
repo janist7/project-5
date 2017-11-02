@@ -19,6 +19,7 @@ var indexViewModel = {
         var clientId = "ADD231Y2455M2GT0IBKL53WH2B52VDF3EJDT0FCLLOGAC5I4";
         var client_secret = "FGT1TFGQSEAO3DU3ISGF50GDWASJAM5BF50AE1G5AVBT5R4U";
         var version = "20171030";
+        /* Initialize google map. */
         map = new google.maps.Map(document.getElementById('map'), {
             center: {
                 lat: 56.948005,
@@ -34,13 +35,18 @@ var indexViewModel = {
                 position: google.maps.ControlPosition.TOP_RIGHT
             }
         });
+
+        /* Initialize infowindow. */
         largeInfowindow = new google.maps.InfoWindow({
             maxWidth: 200
         });
+
+        /* Initialize zoom autocomplete. */
         zoomAutocomplete = new google.maps.places.Autocomplete(
             document.getElementById('zoom-to-area-text'),
             options
         );
+
         /* Initialize the drawing manager. */
         drawingManager = new google.maps.drawing.DrawingManager({
             drawingMode: google.maps.drawing.OverlayType.POLYGON,
@@ -119,6 +125,7 @@ var indexViewModel = {
             self.markers().forEach(function (marker) {
                 marker.pin.setVisible(true);
                 marker.pin.setMap(map);
+                // Dont readd visible markers at each press of showMarkers
                 if (!polygon) {
                     if (ko.unwrap(self.visibleMarkers).indexOf(marker) === -1) {
                         self.visibleMarkers.push(marker);
@@ -152,6 +159,7 @@ var indexViewModel = {
                 animation: google.maps.Animation.DROP,
                 icon: defaultIcon
             };
+            // Ajax call to fill out rest of infoview info
             $.ajax({
                 url: url,
                 dataType: "json",
@@ -176,6 +184,7 @@ var indexViewModel = {
                     marker.forsquareDataAvailable = true;
                 },
                 error: function (e) {
+                    // if there is a error content string contains only a warning
                     marker.forsquareDataAvailable = false;
                 }
             });
@@ -190,6 +199,7 @@ var indexViewModel = {
                 this.setIcon(defaultIcon);
             });
         });
+        // Initial run of showMarkers
         self.showMarkers();
 
 
@@ -225,7 +235,7 @@ var indexViewModel = {
                 marker.pin.setAnimation(google.maps.Animation.BOUNCE);
                 setTimeout(function () {
                     marker.pin.setAnimation(null);
-                }, 1420);
+                }, 1420); // 1420 seems to be 2 bounces
                 infowindow.addListener('closeclick', function () {
                     infowindow.marker = null;
                 });
@@ -254,6 +264,7 @@ var indexViewModel = {
                 var getStreetView = function (data, status) {
                     var panorama;
                     var panoramaOptions;
+                    // Adds pano div to content string depending on streetview call status
                     if (status === google.maps.StreetViewStatus.OK) {
                         contentString += '<div id="pano"></div>';
                         var nearStreetViewLocation = data.location.latLng;
@@ -302,6 +313,7 @@ var indexViewModel = {
                     polygon.setMap(null);
                     polygon = null;
                 }
+                // repopulate both markers and filter list
                 self.showMarkers();
                 self.filterMarkers();
             } else {
@@ -333,8 +345,8 @@ var indexViewModel = {
         self.searchWithinPolygon = function () {
             self.visibleMarkers.removeAll();
             self.markers().forEach(function (marker) {
-                // Just giving marker.latLng does not work for some odd reason, no errors too
                 if (google.maps.geometry.poly.containsLocation(marker.pin.position, polygon)) {
+                    // Reset pin and filter list entry to visible
                     marker.pin.setMap(map);
                     self.visibleMarkers.push(marker);
                     marker.pin.setVisible(true);
@@ -365,11 +377,11 @@ var indexViewModel = {
         /* Filters visible markers based on user input*/
         self.filterMarkers = function () {
             var searchInput = self.userInput().toLowerCase();
+            // if drawing filter active only display/search in that area
             if (polygon) {
                 self.searchWithinPolygon(polygon);
                 self.filterInput(searchInput);
             } else {
-                // This looks at the name of each places and then determines if the user
                 self.filterInput(searchInput);
             }
         };
