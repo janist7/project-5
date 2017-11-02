@@ -1,24 +1,21 @@
 var indexViewModel = {
 
     init: function () {
-        "use strict";
+        'use strict';
         /*global google */
         /*global styles*/
         /*global ko*/
-        var map;
-        var drawingManager;
-        var zoomAutocomplete;
-        var largeInfowindow;
-        var polygon = null;
-        var options = {
+        let map, drawingManager, zoomAutocomplete, largeInfowindow, polygon = null,
+            options, clientId, client_secret, version;
+        clientId = 'ADD231Y2455M2GT0IBKL53WH2B52VDF3EJDT0FCLLOGAC5I4';
+        client_secret = 'FGT1TFGQSEAO3DU3ISGF50GDWASJAM5BF50AE1G5AVBT5R4U';
+        version = '20171030';
+        options = {
             types: ['geocode'],
             componentRestrictions: {
                 country: "lv"
             }
         };
-        var clientId = "ADD231Y2455M2GT0IBKL53WH2B52VDF3EJDT0FCLLOGAC5I4";
-        var client_secret = "FGT1TFGQSEAO3DU3ISGF50GDWASJAM5BF50AE1G5AVBT5R4U";
-        var version = "20171030";
         /* Initialize google map. */
         map = new google.maps.Map(document.getElementById('map'), {
             center: {
@@ -66,7 +63,7 @@ var indexViewModel = {
 
 
     render: function (map, drawingManager, zoomAutocomplete, largeInfowindow, polygon, options, clientId, client_secret, version) {
-        "use strict";
+        'use strict';
         var self = this;
         /*global $*/
         /*global model*/
@@ -81,7 +78,10 @@ var indexViewModel = {
         // Observables
 
 
-        /* Marker object */
+        /**
+         * @constructor
+         * @description Marker object
+         */
         self.Marker = function (dataObj) {
             this.title = dataObj.name;
             this.latLng = dataObj.latLng;
@@ -96,15 +96,22 @@ var indexViewModel = {
         };
 
 
-        /* Create all markers from marker object */
+        /**
+         * @description Create all markers from marker object
+         * @param {object} Marker object
+         */
         model.locations.forEach(function (marker) {
             self.markers.push(new self.Marker(marker));
         });
 
 
-        /* Create costom marker pin from passed color */
+        /**
+         * @description Create costom marker pin from passed color
+         * @param {string} Hexidecimal value of a color
+         * @returns {object} Costom marker
+         */
         self.makeMarkerIcon = function (markerColor) {
-            var markerImage = new google.maps.MarkerImage(
+            let markerImage = new google.maps.MarkerImage(
                 'http://chart.googleapis.com/chart?chst=d_map_spin&chld=1.15|0|' + markerColor + '|40|_|%E2%80%A2',
                 new google.maps.Size(21, 34),
                 new google.maps.Point(0, 0),
@@ -115,13 +122,16 @@ var indexViewModel = {
         };
 
 
-        var defaultIcon = self.makeMarkerIcon('0091ff');
-        var highlightedIcon = self.makeMarkerIcon('FFFF24');
+        let defaultIcon = self.makeMarkerIcon('0091ff');
+        let highlightedIcon = self.makeMarkerIcon('FFFF24');
 
 
-        /* This function will loop through the markers array and display them all and add them initially to visible markers array */
+        /**
+         * @description This function will loop through the markers array and
+         * display them all and add them initially to visible markers array
+         */
         self.showMarkers = function () {
-            var bounds = new google.maps.LatLngBounds();
+            let bounds = new google.maps.LatLngBounds();
             self.markers().forEach(function (marker) {
                 marker.pin.setVisible(true);
                 marker.pin.setMap(map);
@@ -140,7 +150,10 @@ var indexViewModel = {
         };
 
 
-        /* This function will loop through the markers and hide them all and remove them from visible markers array. */
+        /**
+         * @description This function will loop through the markers and hide
+         * them all and remove them from visible markers array.
+         */
         self.hideMarkers = function () {
             self.visibleMarkers.removeAll();
             self.markers().forEach(function (marker) {
@@ -149,10 +162,14 @@ var indexViewModel = {
         };
 
 
-        /* The following group uses the markers array to create an array of markers on initialize and gets information from forsquare.*/
+        /**
+         * @description The following group uses the markers array to create an
+         * array of markers on initialize and gets information from forsquare.
+         * @param {object} Marker object
+         */
         self.markers().forEach(function (marker) {
-            var url = "https://api.foursquare.com/v2/venues/" + marker.id + "?client_id=" + clientId + "&client_secret=" + client_secret + "&v=" + version;
-            var markerOptions = {
+            let url = 'https://api.foursquare.com/v2/venues/' + marker.id + '?client_id=' + clientId + '&client_secret=' + client_secret + '&v=' + version;
+            let markerOptions = {
                 title: marker.title,
                 map: self.googleMap,
                 position: marker.latLng,
@@ -162,18 +179,18 @@ var indexViewModel = {
             // Ajax call to fill out rest of infoview info
             $.ajax({
                 url: url,
-                dataType: "json",
+                dataType: 'json',
                 async: true,
                 success: function (data) {
-                    var result = data.response.venue;
+                    let result = data.response.venue;
                     if (result.location) {
-                        marker.formattedAddress = result.location.hasOwnProperty('formattedAddress') ? result.location.formattedAddress : "-";
+                        marker.formattedAddress = result.location.hasOwnProperty('formattedAddress') ? result.location.formattedAddress : '-';
                     }
                     if (result.canonicalUrl) {
                         marker.forsquareLink = result.canonicalUrl;
                     }
                     if (result.bestPhoto) {
-                        marker.forsquareImageLink = result.bestPhoto.prefix + "100x100" + result.bestPhoto.suffix;
+                        marker.forsquareImageLink = result.bestPhoto.prefix + '100x100' + result.bestPhoto.suffix;
                     }
                     if (result.rating) {
                         marker.forsquareRating = result.rating;
@@ -203,9 +220,12 @@ var indexViewModel = {
         self.showMarkers();
 
 
-        /* Zooms to location based on address given, needs to unwrap the observable first before the value can be used */
+        /**
+         * @description Zooms to location based on address given, needs to
+         * unwrap the observable first before the value can be used
+         */
         self.zoomToArea = function () {
-            var geocoder = new google.maps.Geocoder();
+            let geocoder = new google.maps.Geocoder();
             if (ko.utils.unwrapObservable(self.address) === '') {
                 window.alert('You must enter an area, or address.');
             } else {
@@ -227,7 +247,13 @@ var indexViewModel = {
         };
 
 
-        /* This function populates the infowindow when the pin is clicked. */
+
+        /**
+         * @description This function populates the infowindow when the pin is
+         * clicked.
+         * @param {object} Marker object
+         * @param {object} Infowindow object
+         */
         self.populateInfoWindow = function (marker, infowindow) {
             if (infowindow.marker !== marker.pin) {
                 infowindow.setContent('');
@@ -239,9 +265,9 @@ var indexViewModel = {
                 infowindow.addListener('closeclick', function () {
                     infowindow.marker = null;
                 });
-                var streetViewService = new google.maps.StreetViewService();
-                var radius = 50;
-                var contentString;
+                let streetViewService = new google.maps.StreetViewService();
+                let radius = 50;
+                let contentString;
                 if (marker.forsquareDataAvailable) {
                     contentString = '<h4>' + marker.title + '</h4>' +
                         '<hr>' + '<div class="forsquare">' +
@@ -261,14 +287,14 @@ var indexViewModel = {
                         '<h5>Forsquare data not available. Refresh page later.</h5>' +
                         '<hr>';
                 }
-                var getStreetView = function (data, status) {
-                    var panorama;
-                    var panoramaOptions;
+                let getStreetView = function (data, status) {
+                    let panorama;
+                    let panoramaOptions;
                     // Adds pano div to content string depending on streetview call status
                     if (status === google.maps.StreetViewStatus.OK) {
                         contentString += '<div id="pano"></div>';
-                        var nearStreetViewLocation = data.location.latLng;
-                        var heading = google.maps.geometry.spherical.computeHeading(
+                        let nearStreetViewLocation = data.location.latLng;
+                        let heading = google.maps.geometry.spherical.computeHeading(
                             nearStreetViewLocation,
                             marker.pin.position
                         );
@@ -299,13 +325,18 @@ var indexViewModel = {
         };
 
 
-        /* Event for when a marker is clicked*/
+        /**
+         * @description Event for when a marker is clicked
+         * @param {object} Marker object
+         */
         self.showInfoWindow = function (marker) {
             google.maps.event.trigger(marker.pin, 'click');
         };
 
 
-        // This toggles the poligon drawing option.
+        /**
+         * @description This toggles the poligon drawing option.
+         */
         self.toggleDrawing = function () {
             if (drawingManager.map) {
                 drawingManager.setMap(null);
@@ -322,9 +353,11 @@ var indexViewModel = {
         };
 
 
-        /* Add an event listener so that the polygon is captured,  call the
-        searchWithinPolygon function. This will show the markers in the polygon,
-        and hide any outside of it. */
+        /**
+         * @description Add an event listener so that the polygon is captured,
+         * call the searchWithinPolygon function. This will show the markers in
+         * the polygon, and hide any outside of it.
+         */
         drawingManager.addListener('overlaycomplete', function (event) {
             if (polygon) {
                 polygon.setMap(null);
@@ -339,9 +372,11 @@ var indexViewModel = {
         });
 
 
-        /* This function hides all markers outside the polygon,
-        and shows only the ones within it. This is so that the
-        user can specify an exact area of search. */
+        /**
+         * @description This function hides all markers outside the polygon,
+         * and shows only the ones within it. This is so that the
+         * user can specify an exact area of search.
+         */
         self.searchWithinPolygon = function () {
             self.visibleMarkers.removeAll();
             self.markers().forEach(function (marker) {
@@ -357,6 +392,9 @@ var indexViewModel = {
         };
 
 
+        /**
+         * @description Filters visible markers based on user input
+         */
         self.filterInput = function (searchInput) {
             self.visibleMarkers.removeAll();
             // input can be found within the place name.
@@ -374,9 +412,12 @@ var indexViewModel = {
         };
 
 
-        /* Filters visible markers based on user input*/
+        /**
+         * @description Calls filtering of user input based on weather or not
+         * poligon drawing is active
+         */
         self.filterMarkers = function () {
-            var searchInput = self.userInput().toLowerCase();
+            let searchInput = self.userInput().toLowerCase();
             // if drawing filter active only display/search in that area
             if (polygon) {
                 self.searchWithinPolygon(polygon);
