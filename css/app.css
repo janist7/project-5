@@ -3,7 +3,7 @@
     height: 10vh;
 }
 
-.title>h1 {
+.title > h1 {
     font-size: 7vw;
     line-height: 10vh;
     margin: 0;
@@ -38,16 +38,20 @@
     margin: 0;
 }
 
+#error {
+    top: 50%;
+    width: auto;
+    height: 10wh;
+}
+
+#error > h1,
+#error > p {
+    text-align: center;
+}
+
 #pano {
     width: auto;
     height: 200px;
-}
-
-#error {
-    position: fixed;
-    top: 350px;
-    left: 5%;
-    width: 20%;
 }
 
 .collapse.in,
@@ -72,7 +76,7 @@
     box-shadow: none !important;
 }
 
-.panel-default>.panel-heading {
+.panel-default > .panel-heading {
     background-color: transparent !important;
     border: none !important;
     position: absolute;
@@ -103,7 +107,7 @@
 }
 
 @media (min-width: 576px) {
-    .title>h1 {
+    .title > h1 {
         font-size: 5vh;
     }
 }
@@ -117,10 +121,11 @@
         max-height: 90vh;
         display: block !important;
     }
-    .panel-default>.panel-heading {
+    .panel-default > .panel-heading {
         display: none !important;
     }
-    #map {
+    #map,
+    #error {
         height: 90vh;
         width: 70vw;
         position: absolute;
@@ -145,7 +150,8 @@
     .collapse {
         width: 20vw !important;
     }
-    #map {
+    #map,
+    #error {
         width: 80vw;
         margin: 0 0 0 20vw;
     }

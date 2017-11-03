@@ -50,8 +50,8 @@
             </div>
         </section>
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12" id="map"></div>
-        <div id="error"></div>
     </div>
+    <div id="error"></div>
     <script src="https://ajax.aspnetcdn.com/ajax/knockout/knockout-3.4.2.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
@@ -61,7 +61,7 @@
     <script src="js/errors/errors.js"></script>
     <script src="js/view-models/index/indexViewModel.js"></script>
     <script src="js/view-models/app.js"></script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?libraries=places,geometry,drawing&key=AIzaSyAy-lW5xQw6352HZ89BESwJdibeu_P2vH0&v=3&callback=mainViewModel" onerror="googleMapsError"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?libraries=places,geometry,drawing&key=AIzaSyAy-lW5xQw6352HZ89BESwJdibeu_P2vH0&v=3&callback=mainViewModel" onerror="googleMapsError()"></script>
 </body>
 
 </html>
