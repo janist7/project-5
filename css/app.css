@@ -41,7 +41,7 @@
 #error {
     top: 50%;
     width: auto;
-    height: 10wh;
+    height: 10vh;
 }
 
 #error > h1,
@@ -124,11 +124,15 @@
     .panel-default > .panel-heading {
         display: none !important;
     }
-    #map,
-    #error {
+    #map {
         height: 90vh;
         width: 70vw;
         position: absolute;
+        margin: 0 0 0 30vw;
+    }
+
+    #error {
+        width: 70vw;
         margin: 0 0 0 30vw;
     }
     .dropdown-top {
